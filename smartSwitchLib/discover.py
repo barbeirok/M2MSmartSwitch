@@ -6,7 +6,7 @@ import socket
 
 from Objects.HashTable import HashTable
 
-#hash_table = HashTable.__init__(50)
+hash_table = HashTable(50)
 
 
 def get_network_ip():
