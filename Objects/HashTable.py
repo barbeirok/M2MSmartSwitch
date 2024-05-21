@@ -28,3 +28,10 @@ class HashTable:
                 del self.table[index][i]
                 return
         raise KeyError("Key not found")
+
+    def print_table(self):
+        for i, bucket in enumerate(self.table):
+            if bucket:
+                print(f"Bucket {i}: {bucket}")
+            else:
+                print(f"Bucket {i}: Empty")

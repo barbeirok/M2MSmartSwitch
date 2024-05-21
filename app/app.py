@@ -18,4 +18,4 @@ def discover_devices():
 if __name__ == '__main__':
     app.run()
 
-smartSwitchLib.get_network_ip()
+smartSwitchLib.discover()

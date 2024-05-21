@@ -164,8 +164,9 @@ def discover():
                 server_ip = response_json['serverIP']
                 mac_address = response_json['macaddress']
                 print(f"{network} == {get_network_ip()} & {server_ip} == {get_own_ip_address()}")
-                if network == get_network_ip() and server_ip == get_own_ip_address():
+                if network == get_network_ip():
                     hash_table.add(key=mac_address, value=ip)
+                    hash_table.print_table()
                     print("entered if")
         except requests.exceptions.RequestException as e:
             print(f"Failed to connect to IP: {ip} - {e}")
