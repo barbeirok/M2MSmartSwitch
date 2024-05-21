@@ -1,34 +1,62 @@
-import ipaddress
 import platform
-import subprocess
 import requests
 import uuid
 import hashlib
+import subprocess
+import re
 import socket
+import ipaddress
 
 from Objects.HashTable import HashTable
 
 hash_table = HashTable(50)
 
 
-def get_network_ip():
+def get_host_ip():
     # Create a socket object
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     try:
-        # Connect to a dummy server (Google DNS) to get the default gateway IP address
+        # Connect to a dummy server (Google DNS) to get the host IP address
         s.connect(('8.8.8.8', 80))
-
-        # Get the default gateway IP address
-        network_ip = s.getsockname()[0]
+        # Get the host IP address
+        host_ip = s.getsockname()[0]
     except socket.error:
-        network_ip = "127.0.0.1"  # If unable to connect, default to localhost
-
+        host_ip = "127.0.0.1"  # If unable to connect, default to localhost
     finally:
         s.close()  # Close the socket
 
-    print(network_ip)
-    return network_ip
+    return host_ip
+
+
+def get_subnet_mask():
+    # Retrieve subnet mask using ipconfig command
+    try:
+        result = subprocess.run(['ipconfig'], capture_output=True, text=True)
+        output = result.stdout
+
+        # Find the subnet mask in the ipconfig output
+        ip_pattern = re.compile(r'Subnet Mask[ .]*: (\d+\.\d+\.\d+\.\d+)')
+        match = ip_pattern.search(output)
+        if match:
+            return match.group(1)
+    except Exception as e:
+        print(f"An error occurred while retrieving subnet mask: {e}")
+
+    return None
+
+
+def get_network_ip():
+    host_ip = get_host_ip()
+    subnet_mask = get_subnet_mask()
+
+    if host_ip and subnet_mask:
+        # Calculate the network address
+        network = ipaddress.IPv4Network(f"{host_ip}/{subnet_mask}", strict=False)
+        print(str(network.network_address))
+        return str(network.network_address)
+
+    return None
 
 
 def get_own_ip_address():
@@ -86,37 +114,59 @@ def ping(host):
         return False
 
 
-def get_all_hosts(network):
+#def get_all_hosts(network):
     """
     Returns all the IP addresses in the network
     """
-    net = ipaddress.ip_network(network)
-    return [str(ip) for ip in net.hosts()]
+    #net = ipaddress.ip_network(network)
+    #return [str(ip) for ip in net.hosts()]
 
 
-def scan_network(network):
-    """
-    Main function to get all pingable devices in the network
-    """
-    all_hosts = get_all_hosts(network)
-    pingable_hosts = []
+def scan_network():
+    # Run the 'arp -a' command
+    result = subprocess.run(['arp', '-a'], capture_output=True, text=True)
 
-    for host in all_hosts:
-        if ping(host):
-            pingable_hosts.append(host)
-            print(f"{host} is pingable")
+    # Initialize an empty list to store the IP addresses
+    ip_addresses = []
+    # Check if the command was successful
+    if result.returncode == 0:
+        output = result.stdout
 
-    return pingable_hosts
+        # Regular expression to match IP addresses
+        ip_pattern = re.compile(r'\d+\.\d+\.\d+\.\d+')
+
+        # Find all IP addresses in the output
+        ip_addresses = ip_pattern.findall(output)
+
+        # Print the list of IP addresses
+    else:
+        print(f"Command failed with return code {result.returncode}")
+        print(result.stderr)
+
+    network_ips = [ip for ip in ip_addresses if ip.startswith('192.168.87.')]
+    print(network_ips)
+    return network_ips
 
 
-def discover(ip_range):
+def discover():
     print("entrou")
-    for ip in scan_network(ip_range):
+    for ip in scan_network():
         print(f"scanning... ip:{ip}")
-        response = requests.get(url='https://' + ip + '5000/host', headers={"content-type": "application/json"}).json()
-        network = response["network"]
-        server_ip = response['serverIp']
-        mac_address = response['macaddress']
-        if response.status_code == 200 & (network == get_network_ip() & server_ip == get_own_ip_address()):
-            hash_table.add(key=mac_address, value=ip)
+        try:
+            response = requests.get(
+                url='http://' + ip + ':5000/host',  # Change to http if https is not needed
+                headers={"Content-Type": "application/json"},
+                timeout=5  # Add a timeout to avoid hanging
+            )
+            if response.status_code == 200:
+                response_json = response.json()
+                network = response_json["network"]
+                server_ip = response_json['serverIP']
+                mac_address = response_json['macaddress']
+                print(f"{network} == {get_network_ip()} & {server_ip} == {get_own_ip_address()}")
+                if network == get_network_ip() and server_ip == get_own_ip_address():
+                    hash_table.add(key=mac_address, value=ip)
+                    print("entered if")
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to connect to IP: {ip} - {e}")
     return hash_table

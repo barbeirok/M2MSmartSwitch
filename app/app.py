@@ -15,10 +15,7 @@ def discover_devices():
     return jsonify(object_to_send), 200
 
 
-
-
 if __name__ == '__main__':
     app.run()
 
-
-smartSwitchLib.discover('10.20.228.0/23')
+smartSwitchLib.get_network_ip()
