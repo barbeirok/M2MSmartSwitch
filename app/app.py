@@ -1,10 +1,5 @@
-import subprocess
-import ipaddress
-import json
-
 from flask import Flask, request, jsonify
-
-from smartSwitchLib.discover import discover
+import smartSwitchLib.discover as smartSwitchLib
 
 app = Flask(__name__)
 
@@ -13,12 +8,17 @@ app = Flask(__name__)
 def discover_devices():
     client_ip = request.remote_addr
     object_to_send = {
-        "macaddress": discover.get_hash_mac_address(),
-        "network": discover.get_network_ip(),
+        "macaddress": smartSwitchLib.get_hash_mac_address(),
+        "network": smartSwitchLib.get_network_ip(),
         "serverIP": client_ip
     }
     return jsonify(object_to_send), 200
 
 
+
+
 if __name__ == '__main__':
     app.run()
+
+
+smartSwitchLib.discover('10.20.228.0/23')

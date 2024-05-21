@@ -1,3 +1,5 @@
+import ipaddress
+import platform
 import subprocess
 import requests
 import uuid
@@ -25,6 +27,7 @@ def get_network_ip():
     finally:
         s.close()  # Close the socket
 
+    print(network_ip)
     return network_ip
 
 
@@ -70,37 +73,46 @@ def get_mac_address():
     return formatted_mac
 
 
-def scan_network(ip_range, subnet_octet):
+def ping(host):
     """
-    Scan a given IP range for reachable devices using ICMP ping.
-
-    Args:
-    - ip_range (str): The IP range to scan (e.g., '192.168.1' for a typical subnet).
-    - subnet_octet (int): The last octet of the subnet mask (e.g., 24 for '192.168.1.x').
-
-    Returns:
-    - reachable_devices (list): List of reachable device IP addresses.
+    Returns True if host responds to a ping request
     """
-    reachable_devices = []
-
-    # Calculate the maximum value for the last octet based on the subnet mask
-    max_value = 2 ** (32 - subnet_octet) - 1
-
-    # Loop through IP addresses in the specified range
-    for i in range(1, max_value):
-        ip = ip_range + '.' + str(i)
-        response = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print('-')
-        if 'Destination host unreachable' not in str(response):
-            print(ip)
-            # If the ping was successful, the device is reachable
-            reachable_devices.append(ip)
-
-    return reachable_devices
+    param = '-n' if platform.system().lower() == 'windows' else '-c'
+    command = ['ping', param, '1', str(host)]
+    try:
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, universal_newlines=True)
+        return "unreachable" not in output and "100% packet loss" not in output
+    except subprocess.CalledProcessError:
+        return False
 
 
-def discover(ip_range, subnet_octet):
-    for ip in scan_network(ip_range, subnet_octet):
+def get_all_hosts(network):
+    """
+    Returns all the IP addresses in the network
+    """
+    net = ipaddress.ip_network(network)
+    return [str(ip) for ip in net.hosts()]
+
+
+def scan_network(network):
+    """
+    Main function to get all pingable devices in the network
+    """
+    all_hosts = get_all_hosts(network)
+    pingable_hosts = []
+
+    for host in all_hosts:
+        if ping(host):
+            pingable_hosts.append(host)
+            print(f"{host} is pingable")
+
+    return pingable_hosts
+
+
+def discover(ip_range):
+    print("entrou")
+    for ip in scan_network(ip_range):
+        print(f"scanning... ip:{ip}")
         response = requests.get(url='https://' + ip + '5000/host', headers={"content-type": "application/json"}).json()
         network = response["network"]
         server_ip = response['serverIp']
