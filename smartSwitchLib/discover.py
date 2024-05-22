@@ -1,122 +1,64 @@
-import ipaddress
-import platform
-import subprocess
-import requests
-import uuid
-import hashlib
 import socket
-
-from Objects.HashTable import HashTable
-
-hash_table = HashTable(50)
-
-
-def get_network_ip():
-    # Create a socket object
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    try:
-        # Connect to a dummy server (Google DNS) to get the default gateway IP address
-        s.connect(('8.8.8.8', 80))
-
-        # Get the default gateway IP address
-        network_ip = s.getsockname()[0]
-    except socket.error:
-        network_ip = "127.0.0.1"  # If unable to connect, default to localhost
-
-    finally:
-        s.close()  # Close the socket
-
-    print(network_ip)
-    return network_ip
+import requests
+import ipaddress
+from app import discovered_devices, get_own_ip_address
+import threading
 
 
-def get_own_ip_address():
-    # Create a socket object
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+discovered_devices = {}
 
-    try:
-        # Connect to a dummy server (Google DNS) to get the local IP address
-        s.connect(('8.8.8.8', 80))
+def get_broadcast_address(ip_address, netmask):
+    network = ipaddress.IPv4Network(ip_address + '/' + netmask, strict=False)
+    return str(network.broadcast_address)
 
-        # Get the local IP address
-        ip_address = s.getsockname()[0]
-    except socket.error:
-        ip_address = "127.0.0.1"  # If unable to connect, default to localhost
+def send_broadcast_message():
+    message = "DISCOVER_REQUEST"
+    network_ip = get_own_ip_address()  # Obtém o endereço IP da rede local
+    netmask = '255.255.254.0'  # Máscara de sub-rede
+    broadcast_ip = get_broadcast_address(network_ip, netmask)  # Obtém o endereço de broadcast da rede local
+    port = 5000  # Porta usada pela rota /host
 
-    finally:
-        s.close()  # Close the socket
+    # Itera sobre todos os IPs na rede local e envia a mensagem de broadcast para cada um deles
+    for ip in ipaddress.IPv4Network(network_ip + '/' + netmask, strict=False):
+        ip_str = str(ip)
+        if ip_str != network_ip:  # Ignora o próprio IP da máquina
+            print(f"Sending broadcast message to {ip_str}:5000", flush=True)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            sock.sendto(message.encode(), (ip_str, port))
+            sock.close()
 
-    return ip_address
+def listen_for_responses():
+    global discovered_devices
+    port = 5000
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('', port))
 
+    while True:
+        data, addr = sock.recvfrom(1024)
+        ip = addr[0]
+        try:
+            response = requests.get(f'http://{ip}:5000/', headers={"content-type": "application/json"})
+            if response.status_code == 200:
+                try:
+                    response_json = response.json()
+                except ValueError as e:
+                    print(f"Error parsing JSON from {ip}: {e}")
+                    print(f"Response content: {response.text}")
+                    continue
 
-def get_hash_mac_address():
-    mac_address = get_mac_address()
-    # Convert the MAC address string to bytes
-    mac_bytes = mac_address.encode('utf-8')
+                mac_address = response_json.get("macaddress")
+                if mac_address:
+                    discovered_devices[mac_address] = {
+                        "network": response_json.get("network"),
+                        "serverIP": response_json.get("serverIP")
+                    }
+                    print(f"Discovered device: {discovered_devices[mac_address]}", flush=True)
+                    print(f"Received broadcast from: {ip}", flush=True)  # Adicionado print da origem do broadcast
+                else:
+                    print(f"No 'macaddress' found in response from {ip}")
+            else:
+                print(f"Received unexpected status code {response.status_code} from {ip}")
 
-    # Create a hash SHA-256 object
-    sha256_hash = hashlib.sha256()
-
-    # Update the hash object with the MAC address bytes
-    sha256_hash.update(mac_bytes)
-
-    # Get the hexadecimal representation of the hashed MAC address
-    hashed_mac = sha256_hash.hexdigest()
-
-    return hashed_mac
-
-
-def get_mac_address():
-    mac = uuid.UUID(int=uuid.getnode()).hex[-12:]
-    formatted_mac = ":".join([mac[i:i + 2] for i in range(0, 12, 2)])
-    return formatted_mac
-
-
-def ping(host):
-    """
-    Returns True if host responds to a ping request
-    """
-    param = '-n' if platform.system().lower() == 'windows' else '-c'
-    command = ['ping', param, '1', str(host)]
-    try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, universal_newlines=True)
-        return "unreachable" not in output and "100% packet loss" not in output
-    except subprocess.CalledProcessError:
-        return False
-
-
-def get_all_hosts(network):
-    """
-    Returns all the IP addresses in the network
-    """
-    net = ipaddress.ip_network(network)
-    return [str(ip) for ip in net.hosts()]
-
-
-def scan_network(network):
-    """
-    Main function to get all pingable devices in the network
-    """
-    all_hosts = get_all_hosts(network)
-    pingable_hosts = []
-
-    for host in all_hosts:
-        if ping(host):
-            pingable_hosts.append(host)
-            print(f"{host} is pingable")
-
-    return pingable_hosts
-
-
-def discover(ip_range):
-    print("entrou")
-    for ip in scan_network(ip_range):
-        print(f"scanning... ip:{ip}")
-        response = requests.get(url='https://' + ip + '5000/host', headers={"content-type": "application/json"}).json()
-        network = response["network"]
-        server_ip = response['serverIp']
-        mac_address = response['macaddress']
-        if response.status_code == 200 & (network == get_network_ip() & server_ip == get_own_ip_address()):
-            hash_table.add(key=mac_address, value=ip)
-    return hash_table
+        except requests.RequestException as e:
+            print(f"Error contacting {ip}: {e}", flush=True)
