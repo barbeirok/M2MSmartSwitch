@@ -1,6 +1,7 @@
 import requests
 from flask import Flask, request, jsonify
 import smartSwitchLib.discover as smartSwitchLib
+import smartSwitchLib.receiver as smartSwitchLibr
 
 app = Flask(__name__)
 
@@ -16,14 +17,16 @@ def discover_devices():
     return jsonify(object_to_send), 200
 
 
+smartSwitchLib.discover()
+
 @app.route('/toggle', methods=['PATCH'])
 def toggle_device():
-
-    return 200
+    smartSwitchLibr.toggle()
+    return "success",200
 
 
 @app.route('/selected', methods=['PATCH'])
-def toggle_device():
+def select_next():
     """
      tentativa de alterar os modulos dentro de cada app
      teria de ter uma tabela em cada app que teria uma quantiade de modulos que iriam ser alterados sem esta app saber
@@ -37,7 +40,7 @@ def toggle_device():
         this code
     return "Same mac different module", 200
     """
-    next_selected = smartSwitchLib.select_next_pair()
+    next_selected = smartSwitchLib.select_next_device()
     if next_selected is None:
         return "No object is selected", 200
     return jsonify(next_selected), 200
@@ -46,4 +49,3 @@ def toggle_device():
 if __name__ == '__main__':
     app.run()
 
-smartSwitchLib.discover()

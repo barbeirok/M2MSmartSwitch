@@ -12,6 +12,12 @@ from Objects.HashTable import HashTable
 hash_table = HashTable(50)
 selected = hash_table.get_first_pair()
 
+def get_all_devices():
+    return hash_table
+
+def select_next_device():
+    global selected
+    return  hash_table.get_next_key_value(selected)
 
 def get_host_ip():
     # Create a socket object
@@ -144,7 +150,7 @@ def scan_network():
         print(f"Command failed with return code {result.returncode}")
         print(result.stderr)
 
-    network_ips = [ip for ip in ip_addresses if ip.startswith('192.168.87.')]
+    network_ips = [ip for ip in ip_addresses if ip.startswith('192.168.184.')]
     print(network_ips)
     return network_ips
 
@@ -164,18 +170,12 @@ def discover():
                 network = response_json["network"]
                 server_ip = response_json['serverIP']
                 mac_address = response_json['macaddress']
-                print(f"{network} == {get_network_ip()} & {server_ip} == {get_own_ip_address()}")
-                if network == get_network_ip():
-                    hash_table.add(key=mac_address, value=ip)
-                    hash_table.print_table()
-                    print("entered if")
+                #print(f"{network} == {get_network_ip()} & {server_ip} == {get_own_ip_address()}")
+                #if network == get_network_ip():
+                hash_table.add(key=mac_address, value=ip)
+                hash_table.print_table()
+                print("entered if")
         except requests.exceptions.RequestException as e:
             print(f"Failed to connect to IP: {ip} - {e}")
     return hash_table
 
-
-def select_next_pair():
-    global selected
-    new_selected = hash_table.get_next_key_value(selected)
-    selected = new_selected
-    return selected
