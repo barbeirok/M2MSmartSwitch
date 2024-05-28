@@ -29,6 +29,28 @@ class HashTable:
                 return
         raise KeyError("Key not found")
 
+    def get_first_pair(self):
+        for bucket in self.table:
+            if bucket:
+                return bucket[0]
+        return None
+
+    def get_next_key_value(self, key):
+        if key is None:
+            return self.get_first_pair()
+        all_pairs = []
+        for bucket in self.table:
+            for pair in bucket:
+                all_pairs.append(pair)
+
+        for i, pair in enumerate(all_pairs):
+            if pair[0] == key:
+                if i + 1 < len(all_pairs):
+                    return all_pairs[i + 1]
+                else:
+                    return None  # No next key-value pair found
+        raise KeyError("Key not found")
+
     def print_table(self):
         for i, bucket in enumerate(self.table):
             if bucket:

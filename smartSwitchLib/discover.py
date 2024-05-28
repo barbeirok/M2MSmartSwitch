@@ -10,6 +10,7 @@ import ipaddress
 from Objects.HashTable import HashTable
 
 hash_table = HashTable(50)
+selected = hash_table.get_first_pair()
 
 
 def get_host_ip():
@@ -171,3 +172,10 @@ def discover():
         except requests.exceptions.RequestException as e:
             print(f"Failed to connect to IP: {ip} - {e}")
     return hash_table
+
+
+def select_next_pair():
+    global selected
+    new_selected = hash_table.get_next_key_value(selected)
+    selected = new_selected
+    return selected
