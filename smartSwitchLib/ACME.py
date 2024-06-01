@@ -1,5 +1,7 @@
 import requests
 import json
+import subprocess
+
 
 def create_ae(ae_name:str):
     #if AE exists
@@ -31,6 +33,32 @@ def create_MQTT_sub():
 
 def stop_MQTT():
     #stop chanel and subs
+
+def execute_curl_command(curl_command):
+    try:
+        # Executa o comando curl usando subprocess
+        process = subprocess.Popen(curl_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = process.communicate()
+
+        # Verifica se houve algum erro durante a execução
+        if process.returncode != 0:
+            print(f"Erro ao executar o comando curl: {error.decode()}")
+        else:
+            print(f"Saída do comando curl: {output.decode()}")
+
+    except Exception as e:
+        print(f"Ocorreu um erro durante a execução do comando curl: {str(e)}")
+
+
+# CRUL PARA CRIAR UAM AE
+#curl -X POST http://127.0.0.1:8080/cse-in -H "X-M2M-RI: 12345" -H "X-M2M-Origin: CAdminAE2" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=2" -d "{ \"m2m:ae\": { \"rn\": \"SmartSwitch\", \"api\": \"Ncase-in\", \"rr\": true, \"srv\": [\"3\"] } }"
+#CURL PARA CRIAR CONTAINER
+#curl -X POST http://127.0.0.1:8080/cse-in/YourAEName -H "X-M2M-RI: 54321" -H "X-M2M-Origin: CAdmin3" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=3" -d "{ \"m2m:cnt\": { \"rn\": \"YourContainerName\" } }"
+#CURL PARA CONTENT INSTANCE
+#curl -X POST http://127.0.0.1:8080/cse-in/SmartSwitch/LAMP1 -H "X-M2M-RI: 98765" -H "X-M2M-Origin: CAdmin3" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=4" -d "{ \"m2m:cin\": { \"con\": \"LAMP1\" } }"
+#CURL PARA ESCREVER JSON ESPECÍFICO DENTRO DO CI
+#curl -X POST http://127.0.0.1:8080/cse-in/YourAEName/YourContainerName -H "X-M2M-RI: 98765" -H "X-M2M-Origin: CAdmin3" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=4" -d "{ \"m2m:cin\": { \"con\": \"{\\\"message\\\":\\\"LAMP1 is ON\\\"}\" } }"
+    #no fundo foi a adição de uma noca CI
 
 """
 import requests
