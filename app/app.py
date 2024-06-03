@@ -2,7 +2,7 @@ import requests
 from flask import Flask, request, jsonify
 import smartSwitchLib.discover as smartSwitchLib
 import smartSwitchLib.receiver as smartSwitchLibr
-
+import smartSwitchLib.ACME as ACME
 app = Flask(__name__)
 
 
@@ -44,6 +44,34 @@ def select_next():
     if next_selected is None:
         return "No object is selected", 200
     return jsonify(next_selected), 200
+
+@app.route('/aes', methods=['POST'])
+def createAE():
+    ae_name = request.json.get('ae_name', 'SmartSwitch')
+    originator = request.json.get('originator', 'SmartSwitch')
+    res = ACME.create_ae(ae_name,originator)
+    print(res)
+    print("Finish")
+    return res, 200
+@app.route('/ae_cont', methods=['POST'])
+def createCont():
+    ae_name = request.json.get('ae_name', 'SmartSwitch')
+    originator = request.json.get('originator', 'SmartSwitch')
+    container_name = request.json.get('container_name', 'SmartSwitch')
+    res = ACME.create_container(ae_name,originator,container_name)
+    print(res)
+    print("Finish")
+    return res, 200
+
+@app.route('/ae_ci', methods=['POST'])
+def createCI():
+    ae_name = request.json.get('ae_name', 'SmartSwitch')
+    originator = request.json.get('originator', 'SmartSwitch')
+    container_name = request.json.get('container_name', 'SmartSwitch')
+    res = ACME.create_ci(ae_name,originator, container_name,"cont")
+    print(res)
+    print("Finish")
+    return res, 200
 
 
 if __name__ == '__main__':
