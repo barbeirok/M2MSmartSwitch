@@ -179,3 +179,4 @@ def discover():
             print(f"Failed to connect to IP: {ip} - {e}")
     return hash_table
 
+#def heavy_discover():
