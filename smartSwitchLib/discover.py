@@ -7,6 +7,9 @@ import re
 import socket
 import ipaddress
 
+import http.client
+import threading
+
 from Objects.HashTable import HashTable
 
 hash_table = HashTable(50)
@@ -179,4 +182,39 @@ def discover():
             print(f"Failed to connect to IP: {ip} - {e}")
     return hash_table
 
-#def heavy_discover():
+#----------- ------------- ------------ ------------ ----------- ---------
+def send_request(ip):
+    try:
+        conn = http.client.HTTPConnection(ip, 5000, timeout=5)  # Especifica a porta 5000
+        conn.request("GET", "/discovernotifier")
+        response = conn.getresponse()
+        print(f'Request sent to {ip}, status: {response.status}')
+    except http.client.HTTPException as e:
+        print(f'HTTP error for {ip}: {e}')
+    except OSError as e:
+        print(f'OS error for {ip}: {e}')
+    except Exception as e:
+        print(f'Failed to send request to {ip}: {e}')
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
+def send_requests_to_ips(ips):
+    threads = []
+    for ip in ips:
+        thread = threading.Thread(target=send_request, args=(ip,))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+
+def get_subnet_ips(network_mask, my_ip):
+    # Cria a rede a partir da máscara e do IP
+    network = ipaddress.IPv4Network(f"{my_ip}/{network_mask}", strict=False)
+
+    # Gera a lista de todos os IPs na sub-rede
+    all_ips = [str(ip) for ip in network.hosts()]
+
+    return all_ips

@@ -3,6 +3,10 @@ from flask import Flask, request, jsonify
 import smartSwitchLib.discover as smartSwitchLib
 import smartSwitchLib.receiver as smartSwitchLibr
 import smartSwitchLib.ACME as ACME
+
+import http.client
+import threading
+
 app = Flask(__name__)
 
 
@@ -72,6 +76,21 @@ def createCI():
     print(res)
     print("Finish")
     return res, 200
+
+@app.route('/discovernotifier', methods=['GET'])
+def discovernotifier():
+    print("i was discovered")
+    return "i was discovered", 200
+
+@app.route('/start', methods=['GET'])
+def st():
+    ips = smartSwitchLib.get_subnet_ips("255.255.254.0","10.20.228.122")
+    """ips = [
+        '10.20.228.122',
+        # Adicione outros IPs conforme necessário
+    ]"""
+    smartSwitchLib.send_requests_to_ips(ips)
+    return "Discover",200
 
 
 if __name__ == '__main__':
