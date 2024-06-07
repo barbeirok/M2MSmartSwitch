@@ -97,9 +97,21 @@ def discovernotifier():
     print("SERVER IP ->"+server_ip)
     mac_address = smartSwitchLib.get_hash_mac_address()
     network_ip = smartSwitchLib.get_own_ip_address()
-    curl = f'curl -X POST http://{server_ip}:5000/registerdiscovered -H "Content-Type: application/json" -d \'{{ "macaddress": "{mac_address}", "network": "{network_ip}" }}\''
-    print(curl)
-    res = ACME.execute_curl(curl)
+
+    data = {
+        "macaddress": smartSwitchLib.get_hash_mac_address(),
+        "network": smartSwitchLib.get_own_ip_address()
+    }
+    try:
+        response = requests.post(
+            url=f'http://{server_ip}:5000/registerdiscovered',
+            headers={"Content-Type": "application/json"},
+            json=data,
+            timeout=5  # Add a timeout to avoid hanging
+        )
+    except requests.exceptions.RequestException as e:
+        print(f'Failed to send request to {ip}: {e}')
+
     #
     """url = f'http://{server_ip}:5000/'
     payload = {
@@ -112,8 +124,11 @@ def discovernotifier():
 
 @app.route('/registerdiscovered', methods=['POST'])
 def registerdiscovered():
-    #Recebe dados do cliente e regista-os
-    return "i was discovered", 201
+    macaddress = request.json.get('macaddress')
+    network = request.json.get('network')
+    print("---------------------------------------------------------- -> ")
+    smartSwitchLib.register(macaddress, network)
+    return "Registered", 201
 
 @app.route('/start', methods=['PATCH'])
 def st():

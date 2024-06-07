@@ -172,18 +172,18 @@ def discover():
                 headers={"Content-Type": "application/json"},
                 timeout=5  # Add a timeout to avoid hanging
             )
-            register(response, ip)
+            if response.status_code == 200:
+                response_json = response.json()
+                network = response_json["network"]
+                server_ip = response_json['serverIP']
+                mac_address = response_json['macaddress']
+                register(response, ip)
         except requests.exceptions.RequestException as e:
             print(f"Failed to connect to IP: {ip} - {e}")
     global selected
     selected = hash_table.get_first_pair()
     return hash_table
-def register(response, ip):
-    if response.status_code == 200:
-        response_json = response.json()
-        network = response_json["network"]
-        server_ip = response_json['serverIP']
-        mac_address = response_json['macaddress']
+def register(mac_address, ip):
         # print(f"{network} == {get_network_ip()} & {server_ip} == {get_own_ip_address()}")
         # if network == get_network_ip():
         hash_table.add(key=mac_address, value=ip)
