@@ -110,8 +110,9 @@ def discovernotifier():
         )
     except requests.exceptions.RequestException as e:
         print(f'Failed to send request to {ip}: {e}')
-    ACME.create_container("SmartSwitch", "SmartSwitch", mac_address)
-    ACME.create_ci("SmartSwitch", "SmartSwitch", mac_address,"OFF")
+
+    ACME.create_container("SmartSwitch", "SmartSwitch", smartSwitchLib.get_hash_mac_address())
+    #ACME.create_ci("SmartSwitch", "SmartSwitch", smartSwitchLib.get_hash_mac_address(),"OFF")
     return "res", 200
 
 @app.route('/registerdiscovered', methods=['POST'])
