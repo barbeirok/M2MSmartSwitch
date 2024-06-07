@@ -10,6 +10,9 @@ import ipaddress
 import http.client
 import threading
 
+import json
+
+
 from Objects.HashTable import HashTable
 
 hash_table = HashTable(50)
@@ -191,7 +194,9 @@ def register(response, ip):
 def send_request(ip):
     try:
         conn = http.client.HTTPConnection(ip, 5000, timeout=5)  # Especifica a porta 5000
-        conn.request("GET", "/discovernotifier")
+        headers = {'Content-type': 'application/json'}
+        body = json.dumps({'server_ip': ip})
+        conn.request("POST", "/discovernotifier", body, headers)
         response = conn.getresponse()
         print(f'Request sent to {ip}, status: {response.status}')
     except http.client.HTTPException as e:

@@ -90,21 +90,34 @@ def getDataCI():
     print("Finish")
     return res, 200
 
-@app.route('/discovernotifier', methods=['GET'])
+@app.route('/discovernotifier', methods=['POST'])
 def discovernotifier():
     print("i was discovered")
-    return "i was discovered", 200
+    server_ip = request.json.get('server_ip', '')
+    print("SERVER IP ->"+server_ip)
+    mac_address = smartSwitchLib.get_hash_mac_address()
+    network_ip = smartSwitchLib.get_own_ip_address()
+    curl = f'curl -X POST http://{server_ip}:5000/registerdiscovered -H "Content-Type: application/json" -d \'{{ "macaddress": "{mac_address}", "network": "{network_ip}" }}\''
+    print(curl)
+    res = ACME.execute_curl(curl)
+    #
+    """url = f'http://{server_ip}:5000/'
+    payload = {
+        "macaddress": smartSwitchLib.get_hash_mac_address(),
+        "network": smartSwitchLib.get_network_ip()
+    }
+    response = requests.post(url, json=payload)
+    #Faz o pedido para a rota /registerdiscovered"""
+    return "res", 200
 
-"""ips = smartSwitchLib.get_subnet_ips("255.255.255.0",smartSwitchLib.get_own_ip_address())
-smartSwitchLib.send_requests_to_ips(ips)"""
+@app.route('/registerdiscovered', methods=['POST'])
+def registerdiscovered():
+    #Recebe dados do cliente e regista-os
+    return "i was discovered", 201
 
-@app.route('/start', methods=['GET'])
+@app.route('/start', methods=['PATCH'])
 def st():
     ips = smartSwitchLib.get_subnet_ips("255.255.255.0",smartSwitchLib.get_own_ip_address())
-    """ips = [
-        '10.20.228.122',
-        # Adicione outros IPs conforme necessário
-    ]"""
     smartSwitchLib.send_requests_to_ips(ips)
     return "Discover",200
 
