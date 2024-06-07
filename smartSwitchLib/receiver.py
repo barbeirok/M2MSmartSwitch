@@ -1,10 +1,16 @@
+import smartSwitchLib.ACME as ACME
+import smartSwitchLib.discover as smartSwitchLib
+import json
+
 
 def toggle():
-    text_file = read_bin_file()
-    print(text_file)
-    data = "on" if (text_file == "off") else "off"
-    print(data)
-    save_bin_file(data)
+    json_string = ACME.get_data_from_container('SmartSwitch', 'SmartSwitch', smartSwitchLib.get_hash_mac_address())
+    print(json_string)
+    data = json.loads(json_string["stdout"])
+    con_value = data["response"]["con"]
+    print(con_value)
+    data = "ON" if (con_value == "OFF") else "OFF"
+    return data
 
 
 def save_bin_file(data):

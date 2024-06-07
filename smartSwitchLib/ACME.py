@@ -26,13 +26,8 @@ def create_container(ae_name:str, originator='SmartSwitch', container_name='Smar
     print("Executed")
     return jsonify({'response': json.loads(res['stdout'])})
 
-def get_data_from_container(ae_name:str, originator='SmartSwitch', container_name='SmartSwitch', ci_name='SmartSwitch'):
+def get_data_from_container(ae_name:str, originator='SmartSwitch', container_name='SmartSwitch'):
     print(f"aename {ae_name} \noriginator {originator} \ncontainer_name {container_name}")
-    curl_command = (f'curl -X GET {acme_url}/cse-in/{ae_name}/{container_name}/{ci_name} '
-                        f'-H "X-M2M-RI: 54321" '
-                        f'-H "X-M2M-Origin: CAdmin-{originator}" '
-                        f'-H "X-M2M-RVI: 3" '
-                        f'-H "Accept: application/json"')
     """
     Explicação dos Parâmetros
     fu=2: Define a operação de descoberta de recursos.
