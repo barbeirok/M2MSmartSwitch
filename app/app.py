@@ -83,10 +83,7 @@ def createCI():
 
 @app.route('/dataci', methods=['GET'])
 def getDataCI():
-    ae_name = request.json.get('ae_name', 'SmartSwitch')
-    originator = request.json.get('originator', 'SmartSwitch')
-    container_name = request.json.get('container_name', 'SmartSwitch')
-    res = ACME.get_data_from_container(ae_name,originator, container_name)
+    res = ACME.get_data_from_container('SmartSwitch', 'SmartSwitch', smartSwitchLib.get_hash_mac_address())
     print(res)
     print("Finish")
     return res, 200
@@ -96,11 +93,12 @@ def discovernotifier():
     print("i was discovered")
     server_ip = request.json.get('server_ip', '')
     print("SERVER IP ->"+server_ip)
-
+    mac_adress = smartSwitchLib.get_hash_mac_address()
     data = {
-        "macaddress": smartSwitchLib.get_hash_mac_address(),
+        "macaddress": mac_adress,
         "network": smartSwitchLib.get_own_ip_address()
     }
+    print(mac_adress)
     try:
         response = requests.post(
             url=f'http://{server_ip}:5000/registerdiscovered',
@@ -111,8 +109,8 @@ def discovernotifier():
     except requests.exceptions.RequestException as e:
         print(f'Failed to send request to {ip}: {e}')
 
-    ACME.create_container("SmartSwitch", "SmartSwitch", smartSwitchLib.get_hash_mac_address())
-    #ACME.create_ci("SmartSwitch", "SmartSwitch", smartSwitchLib.get_hash_mac_address(),"OFF")
+    ACME.create_container("SmartSwitch", "SmartSwitch", mac_adress)
+    ACME.create_ci("SmartSwitch", "SmartSwitch", smartSwitchLib.get_hash_mac_address(),"OFF")
     return "res", 200
 
 @app.route('/registerdiscovered', methods=['POST'])

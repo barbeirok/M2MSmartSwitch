@@ -176,6 +176,8 @@ def discover():
     return hash_table
 
 def register(mac_address, ip):
+        print(mac_address)
+        print(ip)
         hash_table.add(key=mac_address, value=ip)
         hash_table.print_table()
         print("entered if")
