@@ -4,14 +4,14 @@ import json
 import subprocess
 #import MQTT
 
-acme_url = 'http://10.20.140.120:8000'
+acme_url = 'http://127.0.0.1:8080'
 
 def create_ae(ae_name='SmartSwitch', originator='SmartSwitch'):
     print(originator)
     originator = str(originator)
     print(ae_name)
     ae_name = str(ae_name)
-    curl_command = f'curl -X POST {acme_url}/cse-mn -H "X-M2M-RI: 12345" -H "X-M2M-Origin: CAdmin-{originator}" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=2" -d \"{{ \\"m2m:ae\\": {{ \\"rn\\": \\"{ae_name}\\", \\"api\\": \\"N-{originator}\\", \\"rr\\": true, \\"srv\\": [\\"3\\"] }} }}'
+    curl_command = f'curl -X POST {acme_url}/cse-in -H "X-M2M-RI: 12345" -H "X-M2M-Origin: CAdmin-{originator}" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=2" -d \"{{ \\"m2m:ae\\": {{ \\"rn\\": \\"{ae_name}\\", \\"api\\": \\"N-{originator}\\", \\"rr\\": true, \\"srv\\": [\\"3\\"] }} }}'
     print(curl_command)
     res = execute_curl(curl_command)
     print("Executed")
@@ -20,16 +20,45 @@ def create_ae(ae_name='SmartSwitch', originator='SmartSwitch'):
 def create_container(ae_name:str, originator='SmartSwitch', container_name='SmartSwitch'):
     print(ae_name)
     ae_name = str(ae_name)
-    curl_command = f'curl -X POST {acme_url}/cse-mn/{ae_name} -H "X-M2M-RI: 54321" -H "X-M2M-Origin: CAdmin-{originator}" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=3" -d \"{{ \\"m2m:cnt\\": {{ \\"rn\\": \\"{container_name}\\"}} }}'
+    curl_command = f'curl -X POST {acme_url}/cse-in/{ae_name} -H "X-M2M-RI: 54321" -H "X-M2M-Origin: CAdmin-{originator}" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=3" -d \"{{ \\"m2m:cnt\\": {{ \\"rn\\": \\"{container_name}\\"}} }}'
     print(curl_command)
     res = execute_curl(curl_command)
     print("Executed")
     return jsonify({'response': json.loads(res['stdout'])})
+def get_data_from_container(ae_name:str, originator='SmartSwitch', container_name='SmartSwitch', ci_name='SmartSwitch'):
+    print(f"aename {ae_name} \noriginator {originator} \ncontainer_name {container_name}")
+    curl_command = (f'curl -X GET {acme_url}/cse-in/{ae_name}/{container_name}/{ci_name} '
+                        f'-H "X-M2M-RI: 54321" '
+                        f'-H "X-M2M-Origin: CAdmin-{originator}" '
+                        f'-H "X-M2M-RVI: 3" '
+                        f'-H "Accept: application/json"')
+    """
+    Explicação dos Parâmetros
+    fu=2: Define a operação de descoberta de recursos.
+    rcn=4: Indica que queremos os conteúdos dos recursos (representação completa).
+    la=1: Indica que queremos o último (mais recente) ContentInstance.
+    """
+    curl_command = (f'curl -X GET {acme_url}/cse-in/{ae_name}/{container_name}?rcn=4 '
+                        f'-H "X-M2M-RI: 54321" '
+                        f'-H "X-M2M-Origin: CAdmin-{originator}" '
+                        f'-H "X-M2M-RVI: 3" '
+                        f'-H "Accept: application/json"')
+
+    print(curl_command)
+    res = execute_curl(curl_command)
+    data = json.loads(res["stdout"])
+
+    content_instances = data["m2m:cnt"]["m2m:cin"]
+
+    # Sort instances by creation time (ct) in descending order and get the latest one
+    latest_instance = sorted(content_instances, key=lambda x: x["ct"], reverse=True)[0]
+    print(res)
+    return jsonify({'response': latest_instance})
 
 def create_ci(ae_name: str, originator:str, container_name: str, cont:str):
     print(ae_name)
     ae_name = str(ae_name)
-    curl_command = f'curl -X POST {acme_url}/cse-mn/{ae_name}/{container_name} -H "X-M2M-RI: 98765" -H "X-M2M-Origin: CAdmin-{originator}" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=4" -d \"{{ \\"m2m:cin\\": {{ \\"con\\": \\"{{\\\\\\\"message\\\\\\":\\\\\\\"LAMP1 is ON\\\\\\"}}\\" }} }}"'
+    curl_command = (f'curl -X POST {acme_url}/cse-in/{ae_name}/{container_name} -H "X-M2M-RI: 98765" -H "X-M2M-Origin: CAdmin-{originator}" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=4" -d \"{{ \\"m2m:cin\\": {{ \\"con\\": \\"{{\\\\\\\"message\\\\\\":\\\\\\\"LAMP1 is ON\\\\\\"}}\\" }} }}"')
     print(curl_command)
     res = execute_curl(curl_command)
     print("Executed")

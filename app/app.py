@@ -77,14 +77,27 @@ def createCI():
     print("Finish")
     return res, 200
 
+@app.route('/dataci', methods=['GET'])
+def getDataCI():
+    ae_name = request.json.get('ae_name', 'SmartSwitch')
+    originator = request.json.get('originator', 'SmartSwitch')
+    container_name = request.json.get('container_name', 'SmartSwitch')
+    res = ACME.get_data_from_container(ae_name,originator, container_name)
+    print(res)
+    print("Finish")
+    return res, 200
+
 @app.route('/discovernotifier', methods=['GET'])
 def discovernotifier():
     print("i was discovered")
     return "i was discovered", 200
 
+"""ips = smartSwitchLib.get_subnet_ips("255.255.255.0",smartSwitchLib.get_own_ip_address())
+smartSwitchLib.send_requests_to_ips(ips)"""
+
 @app.route('/start', methods=['GET'])
 def st():
-    ips = smartSwitchLib.get_subnet_ips("255.255.254.0","10.20.228.122")
+    ips = smartSwitchLib.get_subnet_ips("255.255.254.0",smartSwitchLib.get_own_ip_address())
     """ips = [
         '10.20.228.122',
         # Adicione outros IPs conforme necessário
