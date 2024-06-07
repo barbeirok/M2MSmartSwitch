@@ -12,7 +12,7 @@ import threading
 
 import json
 
-
+import smartSwitchLib.ACME as ACME
 from Objects.HashTable import HashTable
 
 hash_table = HashTable(50)
@@ -128,14 +128,6 @@ def ping(host):
         return False
 
 
-#def get_all_hosts(network):
-    """
-    Returns all the IP addresses in the network
-    """
-    #net = ipaddress.ip_network(network)
-    #return [str(ip) for ip in net.hosts()]
-
-
 def scan_network():
     # Run the 'arp -a' command
     result = subprocess.run(['arp', '-a'], capture_output=True, text=True)
@@ -163,7 +155,6 @@ def scan_network():
 
 
 def discover():
-    print("entrou")
     for ip in scan_network():
         print(f"scanning... ip:{ip}")
         try:
@@ -183,19 +174,18 @@ def discover():
     global selected
     selected = hash_table.get_first_pair()
     return hash_table
+
 def register(mac_address, ip):
-        # print(f"{network} == {get_network_ip()} & {server_ip} == {get_own_ip_address()}")
-        # if network == get_network_ip():
         hash_table.add(key=mac_address, value=ip)
         hash_table.print_table()
         print("entered if")
-        #TESTAR ISTO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#----------- ------------- ------------ ------------ ----------- ---------
+
+
 def send_request(ip):
     try:
         conn = http.client.HTTPConnection(ip, 5000, timeout=5)  # Especifica a porta 5000
         headers = {'Content-type': 'application/json'}
-        body = json.dumps({'server_ip': ip})
+        body = json.dumps({'server_ip': get_own_ip_address()})
         conn.request("POST", "/discovernotifier", body, headers)
         response = conn.getresponse()
         print(f'Request sent to {ip}, status: {response.status}')

@@ -25,6 +25,7 @@ def create_container(ae_name:str, originator='SmartSwitch', container_name='Smar
     res = execute_curl(curl_command)
     print("Executed")
     return jsonify({'response': json.loads(res['stdout'])})
+
 def get_data_from_container(ae_name:str, originator='SmartSwitch', container_name='SmartSwitch', ci_name='SmartSwitch'):
     print(f"aename {ae_name} \noriginator {originator} \ncontainer_name {container_name}")
     curl_command = (f'curl -X GET {acme_url}/cse-in/{ae_name}/{container_name}/{ci_name} '
@@ -58,7 +59,7 @@ def get_data_from_container(ae_name:str, originator='SmartSwitch', container_nam
 def create_ci(ae_name: str, originator:str, container_name: str, cont:str):
     print(ae_name)
     ae_name = str(ae_name)
-    curl_command = (f'curl -X POST {acme_url}/cse-in/{ae_name}/{container_name} -H "X-M2M-RI: 98765" -H "X-M2M-Origin: CAdmin-{originator}" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=4" -d \"{{ \\"m2m:cin\\": {{ \\"con\\": \\"{{\\\\\\\"message\\\\\\":\\\\\\\"LAMP1 is ON\\\\\\"}}\\" }} }}"')
+    curl_command = (f'curl -X POST {acme_url}/cse-in/{ae_name}/{container_name} -H "X-M2M-RI: 98765" -H "X-M2M-Origin: CAdmin-{originator}" -H "X-M2M-RVI: 3" -H "Content-Type: application/json;ty=4" -d \"{{ \\"m2m:cin\\": {{ \\"con\\": \\"{{\\\\\\\"message\\\\\\":\\\\\\\"{cont}\\\\\\"}}\\" }} }}"')
     print(curl_command)
     res = execute_curl(curl_command)
     print("Executed")

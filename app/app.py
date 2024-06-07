@@ -26,6 +26,7 @@ def discover_devices():
 
 smartSwitchLib.discover()
 
+
 @app.route('/toggle', methods=['PATCH'])
 def toggle_device():
     smartSwitchLibr.toggle()
@@ -95,8 +96,6 @@ def discovernotifier():
     print("i was discovered")
     server_ip = request.json.get('server_ip', '')
     print("SERVER IP ->"+server_ip)
-    mac_address = smartSwitchLib.get_hash_mac_address()
-    network_ip = smartSwitchLib.get_own_ip_address()
 
     data = {
         "macaddress": smartSwitchLib.get_hash_mac_address(),
@@ -111,22 +110,14 @@ def discovernotifier():
         )
     except requests.exceptions.RequestException as e:
         print(f'Failed to send request to {ip}: {e}')
-
-    #
-    """url = f'http://{server_ip}:5000/'
-    payload = {
-        "macaddress": smartSwitchLib.get_hash_mac_address(),
-        "network": smartSwitchLib.get_network_ip()
-    }
-    response = requests.post(url, json=payload)
-    #Faz o pedido para a rota /registerdiscovered"""
+    ACME.create_container("SmartSwitch", "SmartSwitch", mac_address)
+    ACME.create_ci("SmartSwitch", "SmartSwitch", mac_address,"OFF")
     return "res", 200
 
 @app.route('/registerdiscovered', methods=['POST'])
 def registerdiscovered():
     macaddress = request.json.get('macaddress')
     network = request.json.get('network')
-    print("---------------------------------------------------------- -> ")
     smartSwitchLib.register(macaddress, network)
     return "Registered", 201
 
@@ -138,5 +129,8 @@ def st():
 
 
 if __name__ == '__main__':
+    with app.app_context():
+        ACME.create_ae("SmartSwitch", "SmartSwitch")
+
     app.run()
 
