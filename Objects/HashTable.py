@@ -32,24 +32,37 @@ class HashTable:
     def get_first_pair(self):
         for bucket in self.table:
             if bucket:
-                return bucket[0]
+                return bucket[0][0]
         return None
 
-    def get_next_key_value(self, key):
+    """def get_next_key_value(self, key):
         if key is None:
             return self.get_first_pair()
         all_pairs = []
+        print(f"asdasd - {self.table}")
         for bucket in self.table:
-            for pair in bucket:
-                all_pairs.append(pair)
-
+            if bucket:
+                for pair in bucket:
+                    all_pairs.append(pair)
         for i, pair in enumerate(all_pairs):
             if pair[0] == key:
                 if i + 1 < len(all_pairs):
+                    print(all_pairs[i + 1])
                     return all_pairs[i + 1]
                 else:
                     return None  # No next key-value pair found
-        raise KeyError("Key not found")
+        raise KeyError("Key not found")"""
+
+    def get_next_key_value(self, key):
+        found = False
+        for bucket in self.table:
+            for pair in bucket:
+                if found:
+                    return pair[0]
+                if pair[0] == key:
+                    found = True
+        return self.get_first_pair()  # Retorna o primeiro par se a chave for None
+
 
     def print_table(self):
         for i, bucket in enumerate(self.table):

@@ -13,14 +13,15 @@ import threading
 from Objects.HashTable import HashTable
 
 hash_table = HashTable(50)
-selected = hash_table.get_first_pair()
+selected = None
 
 def get_all_devices():
     return hash_table
 
 def select_next_device():
     global selected
-    return  hash_table.get_next_key_value(selected)
+    selected = hash_table.get_next_key_value(selected)
+    return selected
 
 def get_host_ip():
     # Create a socket object
@@ -153,7 +154,7 @@ def scan_network():
         print(f"Command failed with return code {result.returncode}")
         print(result.stderr)
 
-    network_ips = [ip for ip in ip_addresses if ip.startswith('192.168.184.')]
+    network_ips = [ip for ip in ip_addresses if ip.startswith('192.168.226.')]
     print(network_ips)
     return network_ips
 
@@ -168,20 +169,24 @@ def discover():
                 headers={"Content-Type": "application/json"},
                 timeout=5  # Add a timeout to avoid hanging
             )
-            if response.status_code == 200:
-                response_json = response.json()
-                network = response_json["network"]
-                server_ip = response_json['serverIP']
-                mac_address = response_json['macaddress']
-                #print(f"{network} == {get_network_ip()} & {server_ip} == {get_own_ip_address()}")
-                #if network == get_network_ip():
-                hash_table.add(key=mac_address, value=ip)
-                hash_table.print_table()
-                print("entered if")
+            register(response, ip)
         except requests.exceptions.RequestException as e:
             print(f"Failed to connect to IP: {ip} - {e}")
+    global selected
+    selected = hash_table.get_first_pair()
     return hash_table
-
+def register(response, ip):
+    if response.status_code == 200:
+        response_json = response.json()
+        network = response_json["network"]
+        server_ip = response_json['serverIP']
+        mac_address = response_json['macaddress']
+        # print(f"{network} == {get_network_ip()} & {server_ip} == {get_own_ip_address()}")
+        # if network == get_network_ip():
+        hash_table.add(key=mac_address, value=ip)
+        hash_table.print_table()
+        print("entered if")
+        #TESTAR ISTO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #----------- ------------- ------------ ------------ ----------- ---------
 def send_request(ip):
     try:

@@ -7,7 +7,10 @@ import smartSwitchLib.ACME as ACME
 import http.client
 import threading
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/host', methods=['GET'])
@@ -97,7 +100,7 @@ smartSwitchLib.send_requests_to_ips(ips)"""
 
 @app.route('/start', methods=['GET'])
 def st():
-    ips = smartSwitchLib.get_subnet_ips("255.255.254.0",smartSwitchLib.get_own_ip_address())
+    ips = smartSwitchLib.get_subnet_ips("255.255.255.0",smartSwitchLib.get_own_ip_address())
     """ips = [
         '10.20.228.122',
         # Adicione outros IPs conforme necessário
