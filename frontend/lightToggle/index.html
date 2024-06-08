@@ -9,7 +9,12 @@
   <body>
     <div class="button-group">
       <button id="toggle-btn">Toggle Light</button>
-      <button id="select-next-btn">Select Next</button>
+      <button
+        onclick="fetchRequest(apiUrl + 'selected', 'PATCH')"
+        id="select-next-btn"
+      >
+        Select Next
+      </button>
     </div>
     <script src="script.js"></script>
   </body>

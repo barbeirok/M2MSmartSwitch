@@ -6,8 +6,7 @@ const reloadButton = document.getElementById('reload-btn')
 async function fetchLampStatus() {
   try {
     const response = await fetch(apiUrl)
-    const rawData = await response.json()
-    const data = rawData.response
+    const data = await response.json()
     const lightStatus = JSON.parse(data.con).message
     console.log(lightStatus)
     updateStatus(lightStatus)
