@@ -29,6 +29,6 @@ function updateStatus(status) {
 reloadButton.addEventListener('click', fetchLampStatus)
 
 // fetch after 10 seconds
-setInterval(fetchLampStatus, 7500)
+setInterval(fetchLampStatus, 5000)
 
 window.onload = fetchLampStatus
