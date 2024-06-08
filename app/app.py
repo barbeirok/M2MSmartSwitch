@@ -44,7 +44,7 @@ def toggle_device():
 def call_toggle():
     server_ip = smartSwitchLib.hash_table.get(smartSwitchLib.selected)
     try:
-        response = requests.post(
+        response = requests.patch(
             url=f'http://{server_ip}:5000/toggle',
             headers={"Content-Type": "application/json"},
             timeout=5  # Add a timeout to avoid hanging
@@ -52,7 +52,7 @@ def call_toggle():
     except requests.exceptions.RequestException as e:
         print(f'Failed to send request to server: {e}')
 
-    return "Registered", 201
+    return "Sending request to selected device", 201
 
 
 @app.route('/selected', methods=['PATCH'])
