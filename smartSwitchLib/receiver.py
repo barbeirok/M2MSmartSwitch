@@ -1,15 +1,34 @@
+import re
+
 import smartSwitchLib.ACME as ACME
 import smartSwitchLib.discover as smartSwitchLib
 import json
 
 
 def toggle():
-    json_string = ACME.get_data_from_container('SmartSwitch', 'SmartSwitch', smartSwitchLib.get_hash_mac_address())
-    print(json_string)
-    data = json.loads(json_string["stdout"])
-    con_value = data["response"]["con"]
-    print(con_value)
-    data = "ON" if (con_value == "OFF") else "OFF"
+    res = ACME.get_data_from_container('SmartSwitch', 'SmartSwitch', smartSwitchLib.get_hash_mac_address())
+    print(f"----------------------\n{res}\n-------------------")
+    pairs = str(res).split(',')
+
+    # Initialize message variable
+    message = None
+
+    pattern = r"'con':\s*'({.*?})'"
+
+    # Search for the pattern in the data
+    match = re.search(pattern, str(res))
+
+    # If a match is found
+    if match:
+        # Extract the value associated with the key 'con'
+        message_json = match.group(1)
+        # Parse the JSON string to extract the message
+        message = re.search(r'"message"\s*:\s*"([^"]+)"', message_json).group(1)
+        print("Message:", message)
+    else:
+        print("No status was found.")
+
+    data = "ON" if (message == "OFF") else "OFF"
     return data
 
 
