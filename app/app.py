@@ -41,7 +41,7 @@ def toggle_device():
 
 
 @app.route('/togglelistener', methods=['PATCH'])
-def register_discovered():
+def call_toggle():
     server_ip = smartSwitchLib.hash_table.get(smartSwitchLib.selected)
     try:
         response = requests.post(
