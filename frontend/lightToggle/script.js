@@ -3,7 +3,7 @@ const apiUrl = 'http://localhost:5000/'
 const toggleElement = document.getElementById('toggle-btn')
 const selectNextElement = document.getElementById('select-next-btn')
 
-function fetchRequest(url, method, data) {
+function fetchRequest(url, method) {
   const options = {
     method: method,
     headers: {
