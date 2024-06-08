@@ -40,6 +40,21 @@ def toggle_device():
     return data, 200
 
 
+@app.route('/togglelistener', methods=['PATCH'])
+def register_discovered():
+    server_ip = smartSwitchLib.hash_table.get(smartSwitchLib.selected)
+    try:
+        response = requests.post(
+            url=f'http://{server_ip}:5000/toggle',
+            headers={"Content-Type": "application/json"},
+            timeout=5  # Add a timeout to avoid hanging
+        )
+    except requests.exceptions.RequestException as e:
+        print(f'Failed to send request to server: {e}')
+
+    return "Registered", 201
+
+
 @app.route('/selected', methods=['PATCH'])
 def select_next():
     next_selected = smartSwitchLib.select_next_device()
@@ -122,7 +137,9 @@ def register_discovered():
     return "Registered", 201
 
 
+
+with app.app_context():
+    ACME.create_ae("SmartSwitch", "SmartSwitch")
+
 if __name__ == '__main__':
-    with app.app_context():
-        ACME.create_ae("SmartSwitch", "SmartSwitch")
     app.run()
