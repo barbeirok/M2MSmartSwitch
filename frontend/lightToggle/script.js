@@ -11,7 +11,7 @@ discover()
 setInterval(discover, 90*1000)
 
 function discover(){
-  fetchRequest(apiUrl + 'discover', 'GET').then((data) => {
+  fetchRequest(apiUrl + 'discover', 'PATCH').then((data) => {
     selectDiscoveredElement.innerHTML = data
   })
 }
