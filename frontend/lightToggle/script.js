@@ -2,6 +2,19 @@ const apiUrl = 'http://localhost:5000/'
 
 const toggleElement = document.getElementById('toggle-btn')
 const selectNextElement = document.getElementById('select-next-btn')
+const selectDiscoveredElement = document.getElementById('number-discovered')
+
+//call discover when the page loads
+discover()
+
+// call discover every 90secs
+setInterval(discover, 90*1000)
+
+function discover(){
+  fetchRequest(apiUrl + 'discover', 'GET').then((data) => {
+    selectDiscoveredElement.innerHTML = data
+  })
+}
 
 function fetchRequest(url, method) {
   const options = {
